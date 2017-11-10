@@ -62,6 +62,7 @@ public:
 		read_pos = cpy.read_pos;
 		write_pos = cpy.write_pos;
 		m_iBlockSize = cpy.m_iBlockSize;
+		// if there are elements in array, copy memory over to new array
 		if( size )
 		{
 			buf = new T[size];
@@ -70,8 +71,8 @@ public:
 		else
 		{
 			buf = nullptr;
-		}
 	}
+		}
 
 	/* Return the number of elements available to read. */
 	unsigned num_readable() const
@@ -108,6 +109,7 @@ public:
 
 		/* Subtract the blocksize, to account for the element that we never fill
 		 * while keeping the entries aligned to m_iBlockSize. */
+		// m_iBlockSize is the reserved #bytes
 		return ret - m_iBlockSize;
 	}
 
@@ -115,8 +117,7 @@ public:
 
 	void reserve( unsigned n, int iBlockSize = 1 )
 	{
-		m_iBlockSize = iBlockSize;
-
+		// What if iBlockSize < 1?
 		clear();
 		delete[] buf;
 		buf = nullptr;
@@ -126,8 +127,10 @@ public:
 		 * since that would be ambiguous with an empty buffer. */
 		if( n != 0 )
 		{
-			size = n+1;
-			size = ((size + iBlockSize - 1) / iBlockSize) * iBlockSize; // round up
+			size = n+1;		// +1 ensures that if size%iBlockSize = 0, we set size = size+iBlockSize,
+							// otherwise does nothing, and size proceeds to be rounded up
+							// this ensure we reserved at least 1 byte to the circular buffer
+			size = ((size + iBlockSize - 1) / iBlockSize) * iBlockSize; // round up to the nearest mod(iBlockSize)
 
 			buf = new T[size];
 		}
@@ -141,17 +144,24 @@ public:
 	}
 
 	/* Indicate that n elements have been written. */
+	// wrap around buffer array when reach end
 	void advance_write_pointer( int n )
 	{
 		write_pos = (write_pos + n) % size;
 	}
 
 	/* Indicate that n elements have been read. */
+	// wrap around buffer array when reach end
 	void advance_read_pointer( int n )
 	{
 		read_pos = (read_pos + n) % size;
 	}
 
+	// pPointers[0] = HEAD of the empty buffer array chunk AFTER data chunk (wpos address)
+	// pPointers[1] = HEAD of the empty buffer array chunk BEFORE data chunk
+	//				set to buf when HEAD of buf is empty and the action of writing can possibly wrap around buf array
+	// pSize[0] = size of empty buffer AFTER wpos in buffer array (subtracting reserved space)
+	// pSize[1] = size of empty buffer BEFORE wpos in buffer array (subtracting reserved space)
 	void get_write_pointers( T *pPointers[2], unsigned pSizes[2] )
 	{
 		const int rpos = read_pos;
@@ -160,7 +170,7 @@ public:
 		if( rpos <= wpos )
 		{
 			/* The buffer looks like "eeeeDDDDeeee" or "eeeeeeeeeeee" (e = empty, D = data). */
-			pPointers[0] = buf+wpos;
+			pPointers[0] = buf+wpos;	// return 
 			pPointers[1] = buf;
 
 			pSizes[0] = size - wpos;
@@ -185,6 +195,8 @@ public:
 	}
 
 	/* Like get_write_pointers, but only return the first range available. */
+	// i.e., return: HEAD of the empty buffer array chunk AFTER data chunk (wpos address)
+	// fill pSizes with: size of empty buffer AFTER wpos in buffer array (subtracting reserved space)
 	T *get_write_pointer( unsigned *pSizes )
 	{
 		T *pBothPointers[2];
@@ -194,6 +206,11 @@ public:
 		return pBothPointers[0];
 	}
 
+	// pPointers[0] = HEAD of the filled buffer array chunk AFTER empty chunk (rpos address)
+	// pPointers[1] = HEAD of the filled buffer array chunk BEFORE empty chunk
+	//				set to buf when data chunk wrapping around buf array happens
+	// pSize[0] = size of empty buffer AFTER rpos in buffer array
+	// pSize[1] = size of empty buffer BEFORE rpos in buffer array
 	void get_read_pointers( T *pPointers[2], unsigned pSizes[2] )
 	{
 		const int rpos = read_pos;
@@ -246,14 +263,21 @@ public:
 			buffer_size = max_write_size;
 
 		const int from_first = min( buffer_size, sizes[0] );
+		// cpy as much data as possible from wpos to (end/rpos, whichever encounter first)
 		std::memcpy( p[0], buffer, from_first*sizeof(T) );
-		if( buffer_size > sizes[0] )
+		if( buffer_size > sizes[0] )	// more data than the first empty chunk
+			// continue writing to the second dchunk
 			std::memcpy( p[1], buffer+from_first, max(buffer_size-sizes[0], 0u)*sizeof(T) );
+			// max(buffer_size-sizes[0], 0u) ensures buffer_size < sizes[0], otherwise use memcpy.length = 0
+			// QUESTION: this doesn't seem to fulfill the claim that:
+			// "as much data as possible will be fit"
 
+		// update wpos
 		advance_write_pointer( buffer_size );
 
 		return buffer_size;
 	}
+
 
 	/* Read buffer_size elements into buffer from the circular buffer object,
 	 * and advance the read pointer.  Return the number of elements that were
@@ -278,14 +302,17 @@ public:
 
 		/* Set the data that we just read to 0xFF.  This way, if we're passing pointers
 		 * through, we can tell if we accidentally get a stale pointer. */
+		// QUESTION: what does craig mean? What's the objective of resetting these 
 		std::memset( p[0], 0xFF, from_first*sizeof(T) );
 		if( buffer_size > sizes[0] )
 			std::memset( p[1], 0xFF, max(buffer_size-sizes[0], 0u)*sizeof(T) );
 
+		// update rpos
 		advance_read_pointer( buffer_size );
 		return buffer_size;
 	}
 };
+
 
 #endif
 
