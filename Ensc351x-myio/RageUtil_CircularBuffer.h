@@ -170,7 +170,7 @@ public:
 		if( rpos <= wpos )
 		{
 			/* The buffer looks like "eeeeDDDDeeee" or "eeeeeeeeeeee" (e = empty, D = data). */
-			pPointers[0] = buf+wpos;	// return 
+			pPointers[0] = buf+wpos;	// return
 			pPointers[1] = buf;
 
 			pSizes[0] = size - wpos;
@@ -302,7 +302,7 @@ public:
 
 		/* Set the data that we just read to 0xFF.  This way, if we're passing pointers
 		 * through, we can tell if we accidentally get a stale pointer. */
-		// QUESTION: what does craig mean? What's the objective of resetting these 
+		// QUESTION: what does craig mean? What's the objective of resetting these
 		std::memset( p[0], 0xFF, from_first*sizeof(T) );
 		if( buffer_size > sizes[0] )
 			std::memset( p[1], 0xFF, max(buffer_size-sizes[0], 0u)*sizeof(T) );

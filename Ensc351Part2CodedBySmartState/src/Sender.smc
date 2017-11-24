@@ -1,0 +1,457 @@
+9999 4 1
+6
+BEGIN DATA
+BEGIN GenericState 132
+132 10
+11 7 138 79
+1
+Sender_TopLevel
+0 65535 0
+72
+TEXTBEGIN
+ctx.Crcflg=true; ctx.prep1stBlk(); ctx.errCnt=0; 
+ctx.firstCrcBlk=true;
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN GenericState 101
+101 10
+72 28 89 41
+1
+ACKNAK
+0 12582911 0
+0
+TEXTBEGIN
+
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN GenericState 103
+103 10
+46 52 66 67
+1
+EOT1
+0 12582911 0
+23
+TEXTBEGIN
+/*ctx.sendByte(
+EOT)*/
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN FinalState 109
+109 10
+92 82 96 86
+1
+FinalState
+BEGIN Mesg 112
+112 20
+64 13 101 26
+1
+1 1 16777215 65280
+107
+SER
+(c==ACK) && ctx.bytesRd
+63
+TEXTBEGIN
+ctx.sendBlkPrepNext(); 
+ctx.errCnt=0; 
+ctx.firstCrcBlk=false;
+TEXTEND
+BEGIN Mesg 113
+113 20
+66 59 91 73
+1
+1 1 16777215 65280
+110
+SER
+c==NAK
+18
+TEXTBEGIN
+ctx.sendByte(EOT);
+TEXTEND
+BEGIN Mesg 115
+115 20
+94 70 115 81
+1
+1 1 16777215 65280
+114
+SER
+c==ACK
+18
+TEXTBEGIN
+ctx.result="Done";
+TEXTEND
+BEGIN Mesg 117
+117 20
+66 46 105 61
+1
+1 1 16777215 65280
+116
+SER
+(c==ACK) && !ctx.bytesRd
+54
+TEXTBEGIN
+ctx.sendByte(EOT);ctx.errCnt=0; ctx.firstCrcBlk=false;
+TEXTEND
+BEGIN GenericState 118
+118 10
+15 27 32 41
+1
+START
+0 12582911 0
+0
+TEXTBEGIN
+
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN GenericState 123
+123 10
+90 53 107 66
+1
+EOTEOT
+0 12582911 0
+0
+TEXTBEGIN
+
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN Mesg 125
+125 20
+20 43 54 56
+1
+1 1 16777215 65280
+124
+SER
+((c == NAK) || (c == 'C')) && !ctx.bytesRd
+56
+TEXTBEGIN
+if (c==NAK) {ctx.firstCrcBlk=false;}
+ctx.sendByte(EOT);
+TEXTEND
+BEGIN Mesg 127
+127 20
+92 35 118 50
+1
+1 1 16777215 65280
+126
+SER
+(c==NAK ||                (c=='C' && ctx.firstCrcBlk)) && (ctx.errCnt < errB) 
+31
+TEXTBEGIN
+ctx.resendBlk();
+ctx.errCnt++;
+TEXTEND
+BEGIN InitialState 130
+130 10
+21 19 25 23
+1
+InitialState
+BEGIN Transition 131
+131 40
+19 7 19 15
+130 118
+3 1 1 2
+2 23 23 23 24 
+0 23 24 23 26 
+3 23 26 23 27 
+BEGIN Transition 110
+110 40
+58 57 58 65
+103 123
+2 2 4 2
+2 66 59 67 59 
+1 67 59 89 59 
+3 89 59 90 59 
+BEGIN Transition 136
+136 40
+80 26 80 34
+101 135
+2 2 4 2
+2 89 34 90 34 
+1 90 34 118 34 
+3 118 34 119 34 
+BEGIN Transition 140
+140 40
+48 57 48 65
+103 109
+3 2 4 1
+2 56 67 56 68 
+0 56 68 56 84 
+1 56 84 91 84 
+3 91 84 92 84 
+BEGIN Transition 133
+133 40
+90 73 90 81
+132 109
+4 1 3 1
+2 11 61 10 61 
+1 10 61 8 61 
+0 8 61 8 90 
+1 8 90 94 90 
+0 94 90 94 87 
+3 94 87 94 86 
+BEGIN Transition 143
+143 40
+84 24 84 32
+101 109
+1 3 3 1
+2 84 28 84 27 
+0 84 27 84 25 
+1 84 25 140 25 
+0 140 25 140 90 
+1 140 90 94 90 
+0 94 90 94 87 
+3 94 87 94 86 
+BEGIN Mesg 134
+134 20
+9 90 72 123
+1
+1 1 16777215 65280
+133
+SER
+
+106
+TEXTBEGIN
+cerr << "Sender received totally unexpected char #" << c << ": " << (char) c << endl;
+exit(EXIT_FAILURE);
+TEXTEND
+BEGIN GenericState 135
+135 10
+119 28 136 41
+1
+CAN
+0 12582911 0
+0
+TEXTBEGIN
+
+TEXTEND
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN Mesg 137
+137 20
+100 28 119 40
+1
+1 1 16777215 65280
+136
+SER
+c == CAN
+0
+TEXTBEGIN
+
+TEXTEND
+BEGIN Mesg 139
+139 20
+113 46 145 62
+1
+1 1 16777215 65280
+138
+SER
+c == CAN
+53
+TEXTBEGIN
+ctx.result=
+     "RcvCancelled";
+/*ctx.clearCan()*/
+TEXTEND
+BEGIN Mesg 141
+141 20
+57 69 92 81
+1
+1 1 16777215 65280
+140
+SER
+c == ACK
+27
+TEXTBEGIN
+ctx.result="1st EOT ACK'd";
+TEXTEND
+BEGIN Note 142
+142 50
+97 105 135 118
+1
+0 0 8454143 128
+150
+TEXTBEGIN
+Simplified Sender Statechart
+No dropped characters, no timeouts, 
+     no cancellation via keyboard.
+Copyright 2017 Craig Scratchley
+wcs AT sfu.ca
+TEXTEND
+BEGIN Mesg 144
+144 20
+101 90 146 104
+1
+1 1 16777215 65280
+143
+SER
+c==NAK && (ctx.errCnt >= errB)
+40
+TEXTBEGIN
+ctx.can8();
+ctx.result="ExcessiveNAKs";
+TEXTEND
+BEGIN Transition 145
+145 40
+32 33 32 41
+118 101
+2 3 4 1
+2 32 37 33 37 
+1 33 37 71 37 
+3 71 37 72 37 
+BEGIN Transition 116
+116 40
+75 74 75 82
+101 103
+3 2 1 3
+2 80 41 80 42 
+0 80 42 80 46 
+1 80 46 61 46 
+0 61 46 61 51 
+3 61 51 61 52 
+BEGIN Transition 138
+138 40
+115 33 115 41
+135 109
+3 1 2 1
+2 131 41 131 42 
+0 131 42 131 84 
+1 131 84 97 84 
+3 97 84 96 84 
+BEGIN Transition 114
+114 40
+84 30 84 38
+123 109
+3 3 1 1
+2 94 66 94 67 
+0 94 67 94 81 
+3 94 81 94 82 
+BEGIN Transition 124
+124 40
+12 29 12 37
+118 103
+3 3 4 3
+2 19 41 19 42 
+0 19 42 19 56 
+1 19 56 45 56 
+3 45 56 46 56 
+BEGIN Transition 107
+107 40
+36 36 36 44
+101 101
+1 2 4 3
+2 80 28 80 27 
+0 80 27 80 24 
+1 80 24 68 24 
+0 68 24 68 31 
+1 68 31 71 31 
+3 71 31 72 31 
+BEGIN Transition 126
+126 40
+60 28 60 36
+101 101
+2 3 3 1
+2 89 37 90 37 
+1 90 37 92 37 
+0 92 37 92 45 
+1 92 45 84 45 
+0 84 45 84 42 
+3 84 42 84 41 
+BEGIN Transition 147
+147 40
+107 55 107 63
+123 123
+2 2 2 3
+2 107 59 108 59 
+1 108 59 123 59 
+0 123 59 123 62 
+1 123 62 108 62 
+3 108 62 107 62 
+BEGIN Mesg 146
+146 20
+32 24 70 53
+1
+1 1 16777215 65280
+145
+SER
+(c==NAK || c=='C') && ctx.bytesRd
+105
+TEXTBEGIN
+if (c==NAK) {ctx.Crcflg=false; 
+   ctx.cs1stBlk();
+   ctx.firstCrcBlk=false;}
+ctx.sendBlkPrepNext();
+
+TEXTEND
+BEGIN Mesg 148
+148 20
+111 62 132 73
+1
+1 1 16777215 65280
+147
+SER
+c==NAK
+18
+TEXTBEGIN
+ctx.sendByte(EOT);
+TEXTEND
+END DATA
+Sender
+SenderX
+SenderX.h
+
+42
+INCLUDE BEGIN
+#include <iostream>
+#include <stdlib.h>
+
+INCLUDE END
+20
+DECL BEGIN
+#define c wParam
+
+
+DECL END
+Copyright 2017 W. Craig Scratchley
+75
+DESC BEGIN
+ Simple XMODEM Sender
+
+Copyright (C) 2017 Craig Scratchley
+wcs AT sfu.ca
+DESC END
+0
+INCLUDE BEGIN
+
+INCLUDE END
+0
+DECL BEGIN
+
+DECL END
+Context
+
+0
+DECL BEGIN
+
+DECL END
+Context
+
+0
+DECL BEGIN
+
+DECL END
