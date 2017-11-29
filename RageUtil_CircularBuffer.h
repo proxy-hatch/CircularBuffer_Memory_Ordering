@@ -42,16 +42,15 @@ public:
 		std::swap(size, rhs.size);
 		std::swap(m_iBlockSize, rhs.m_iBlockSize);
 		// std::swap does not support std::atomic<T*> as of C++14, therefore we must write our own
+		// as swap() is only used in assignment operator overloading, efficiency is not critical and we may use the default memory order, sequential.
 		// std::swap( read_pos, rhs.read_pos );
 		// std::swap( write_pos, rhs.write_pos );
-		const int rpos = read_pos.load(std::memory_order_acquire);
-		const int wpos = write_pos.load(std::memory_order_acquire);
-		read_pos.store(rhs.read_pos.load(std::memory_order_acquire),
-				std::memory_order_release);
-		write_pos.store(rhs.write_pos.load(std::memory_order_acquire),
-				std::memory_order_release);
-		rhs.read_pos.store(rpos, std::memory_order_release);
-		rhs.write_pos.store(wpos, std::memory_order_release);
+		const int rpos = read_pos.load();
+		const int wpos = write_pos.load();
+		read_pos.store(rhs.read_pos.load());
+		write_pos.store(rhs.write_pos.load());
+		rhs.read_pos.store(rpos);
+		rhs.write_pos.store(wpos);
 		std::swap(buf, rhs.buf);
 	}
 
@@ -63,12 +62,11 @@ public:
 
 	CircBuf(const CircBuf &cpy) {
 		size = cpy.size;
+		// same rationale as above, efficiency is not critical, we may use the default memory ordering
 		// read_pos = cpy.read_pos;
 		// write_pos = cpy.write_pos;
-		read_pos.store(cpy.read_pos.load(std::memory_order_relaxed),
-				std::memory_order_relaxed);
-		write_pos.store(cpy.write_pos.load(std::memory_order_relaxed),
-				std::memory_order_relaxed);
+		read_pos.store(cpy.read_pos.load());
+		write_pos.store(cpy.write_pos.load());
 		m_iBlockSize = cpy.m_iBlockSize;
 		// if there are elements in array, copy memory over to new array
 		if (size) {
@@ -81,12 +79,13 @@ public:
 
 	/* Return the number of elements available to read. */
 	unsigned num_readable() const {
-		// relax is sufficient for both as we are simply requsting a snapshot of the rpos & wpos.
+		// efficiency is not critical, as observed in this project
+		// default memory ordering is sufficient for both as we are simply requsting a snapshot of the rpos & wpos.
 		// Does not affect rpos/wpos updates
 		// const int rpos = read_pos;
 		// const int wpos = write_pos;
-		const int rpos = read_pos.load(std::memory_order_relaxed);
-		const int wpos = write_pos.load(std::memory_order_relaxed);
+		const int rpos = read_pos.load();
+		const int wpos = write_pos.load();
 
 		if (rpos < wpos)
 			/* The buffer looks like "eeeeDDDDeeee" (e = empty, D = data). */
@@ -102,12 +101,11 @@ public:
 
 	/* Return the number of writable elements. */
 	unsigned num_writable() const {
-		// relax is sufficient for both as we are simply requsting a snapshot of the rpos & wpos.
-		// Does not affect rpos/wpos updates
+		// same rationale as num_readable() above
 		// const int rpos = read_pos;
 		// const int wpos = write_pos;
-		const int rpos = read_pos.load(std::memory_order_relaxed);
-		const int wpos = write_pos.load(std::memory_order_relaxed);
+		const int rpos = read_pos.load();
+		const int wpos = write_pos.load();
 
 		int ret;
 		if (rpos < wpos)
