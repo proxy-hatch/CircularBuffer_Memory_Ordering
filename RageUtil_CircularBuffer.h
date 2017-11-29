@@ -131,6 +131,7 @@ public:
 
 	void reserve(unsigned n, int iBlockSize = 1) {
 		// What if iBlockSize < 1?
+		m_iBlockSize = iBlockSize;
 		clear();
 		delete[] buf;
 		buf = nullptr;
